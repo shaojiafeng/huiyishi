@@ -1,0 +1,170 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+    <script src="/static/dist/js/jquery-3.1.1.js"></script>
+    <script src="/static/dist/js/bootstrap.js"></script>
+
+    <link rel="stylesheet" href="/static/dist/css/bootstrap.css">
+    <style>
+        td.chosen{
+            background-color: yellow;
+        }
+
+        .hide{
+            display: none;
+        }
+         .shade {
+            position: fixed;
+            z-index: 1040;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #999;
+            filter: alpha(opacity=50);
+            -moz-opacity: 0.5;
+            opacity: 0.5;
+        }
+
+        .loading {
+            position: fixed;
+            z-index: 1050;
+            top: 40%;
+            left: 50%;
+            height: 32px;
+            width: 32px;
+            margin: 0 0 0 -16px;
+            background: url(/static/img/loading.gif);
+        }
+    </style>
+</head>
+<body>
+<h3 class="text-center">会议室预定</h3>
+
+<div class="container">
+
+<div class="clearfix" style="padding: 10px 0;float: right">
+        <div style="float: left;color: red" id="errors"></div>
+        <div class='input-group' style="width: 230px;float:left;">
+            <input type='text' class="form-control" id='datetimepicker11' placeholder="请选择日期"/>
+            <span class="input-group-addon">
+                <span class="glyphicon glyphicon-calendar">
+                </span>
+            </span>
+        </div>
+        <div style="padding: 0 5px;float: left">
+            <a id="save" href="#" class="btn btn-primary">保存</a>
+        </div>
+    </div>
+
+
+    <table class="table table-bordered">
+        <thead>
+
+        <tr>
+            <th>会议室</th>
+            {% for item in meeting_scheduled_list %}
+                <th>{{ item.1 }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody id="tBody">
+
+        </tbody>
+    </table>
+</div>
+
+<div class="shade hide"></div>
+<div class="loading hide"></div>
+
+<script src="{% static 'dist/js/jquery-3.1.1.js' %}"></script>
+{#<script src="{% static 'dist/js/jquery.cookie.js' %}"></script>#}
+<script src="{% static 'plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'plugins/datetimepicker/bootstrap-datetimepicker.min.js' %}"></script>
+<script src="{% static 'plugins/datetimepicker/bootstrap-datetimepicker.zh-CN.js' %}"></script>
+
+
+
+
+<script>
+     Date.prototype.Format = function (fmt) { //author: meizz
+        var o = {
+            "M+": this.getMonth() + 1, //月份
+            "d+": this.getDate(), //日
+            "h+": this.getHours(), //小时
+            "m+": this.getMinutes(), //分
+            "s+": this.getSeconds(), //秒
+            "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+            "S": this.getMilliseconds() //毫秒
+        };
+        if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+        for (var k in o)
+            if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+        return fmt;
+    };
+    $(function () {
+        $('#datetimepicker11').datetimepicker({
+            minView: "month",
+            language: "zh-CN",
+            sideBySide: true,
+            format: 'yyyy-mm-dd',
+            bootcssVer: 3,
+            startDate: new Date(),
+            autoclose: true
+        }).on('changeDate', changeDate);
+        var currentDate= new Date();
+        getmeeting_scheduled_info(currentDate.Format('yyyy-MM-dd'))
+    });
+
+
+{#    获取预订信息#}
+    function getmeeting_scheduled_info(choice_date) {
+        $.ajax({
+            url:"/booking/",
+            type:"GET",
+            data:{"choice_date":choice_date},
+            success:function (arg) {
+                if(arg.status){
+                    $("#tBody").empty();
+                    $.each(arg.data,function (i,item) {
+                        var tr =document.createElement("tr");
+                        $.each(item,function (i,v) {
+                            var td=document.createElement("td");
+                            $(td).text(v.text);
+                            $.each(v.attrs,function (ak,av) {
+                                $(td).attr(ak,av)
+                            });
+                            $(tr).append(td)
+                        });
+                        $("#tBody").append(tr)
+                    });
+
+
+                }
+                else{
+                    alert(arg.msg);
+                }
+            }
+
+
+        })
+
+    }
+      function changeDate(ev) {
+           var v = ev.date.Format('yyyy-MM-dd');
+            getmeeting_scheduled_info(v)
+        }
+
+
+
+
+
+
+</script>
+</body>
+</html>
